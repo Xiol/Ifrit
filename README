@@ -1,6 +1,6 @@
 C program to send data from a 1Wire temperature sensor on a RaspberryPi to statsd.
 
-Requires an owserver to be running on the RaspberryPi.
+Requires an owserver to be running on the RaspberryPi and the package libownet-dev to be installed.
 
 Edit ifrit.h to change settings, then:
     make
