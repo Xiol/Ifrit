@@ -7,3 +7,5 @@ Edit ifrit.h to change settings, then:
     ./ifrit
 
 I don't do C - this may blow up.
+
+statsd.{c,h} are from https://github.com/kjagiello/statsd-c-client
