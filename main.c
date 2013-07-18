@@ -4,6 +4,7 @@
 #include <ownetapi.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 #include "ifrit.h"
 #include "statsd.h"
 
@@ -23,7 +24,6 @@ int strip_whitespace(char *s) {
 int main(int argc, char **argv) {
     OWNET_HANDLE owh;
     statsdConnection *statsd = statsdConnect(statsd_host, statsd_port);
-    char *ret = (char *)calloc(30, sizeof(char));
     unsigned short len;
 
     if (NULL == statsd) {
@@ -41,19 +41,32 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    OWNET_read(owh, temp_path, &ret);
-    
-    len = strip_whitespace(ret);
+    for (;;) {
+        char *ret;
 
-    char *buf = (char *)calloc(len+20, sizeof(char));
-    sprintf(buf, "ifrit.temperature:%s|g", ret);
-    statsdSend(statsd, buf, strlen(buf));
+        OWNET_read(owh, temp_path, &ret);
+        len = strip_whitespace(ret);
+        char *buf = (char *)calloc(len+20, sizeof(char));
 
-    printf("Read value: %s\n", ret);
+        if (buf != NULL) {
+            sprintf(buf, "ifrit.temperature:%s|g", ret);
+            statsdSend(statsd, buf, strlen(buf));
+            if (TEMP_TO_STDOUT) {
+                printf("Read value: %s\n", ret);
+            }
+            free(buf);    
+            free(ret);
+        } else {
+            printf("Unable to allocate memory!\n");
+            exit(1);
+        }
 
+        sleep(SLEEPTIME);
+    }
+
+    // We'll never get here :(
+    // Shouldn't matter too much as statsd uses UDP
     statsdClose(statsd);
-    free(ret);
-    free(buf);
 
     return 0;
 }
