@@ -5,8 +5,16 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <signal.h>
 #include "ifrit.h"
 #include "statsd.h"
+
+volatile sig_atomic_t g_running = 1;
+
+void sig_handler(int signum) {
+    printf("Signal received, quitting.\n");
+    g_running = 0;
+}
 
 int strip_whitespace(char *s) {
     char *p = s;
@@ -26,6 +34,11 @@ int main(int argc, char **argv) {
     statsdConnection *statsd = statsdConnect(statsd_host, statsd_port);
     unsigned short len;
 
+    struct sigaction sigact;
+    sigact.sa_handler = sig_handler;
+    sigaction(SIGINT, &sigact, NULL);
+    sigaction(SIGTERM, &sigact, NULL);
+
     if (NULL == statsd) {
         printf("statsd connection failed\n");
         exit(1);
@@ -41,7 +54,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    for (;;) {
+    while (g_running) {
         char *ret;
 
         OWNET_read(owh, temp_path, &ret);
@@ -63,9 +76,6 @@ int main(int argc, char **argv) {
 
         sleep(SLEEPTIME);
     }
-
-    // We'll never get here :(
-    // Shouldn't matter too much as statsd uses UDP
     statsdClose(statsd);
 
     return 0;
