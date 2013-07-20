@@ -5,4 +5,4 @@ const int  statsd_port = 8125;
 const char *statsd_namespace = "ifrit";
 
 #define SLEEPTIME 10
-#define TEMP_TO_STDOUT 0
+#define TEMP_TO_SYSLOG 0
