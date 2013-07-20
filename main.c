@@ -48,13 +48,13 @@ int main(int argc, char **argv) {
         printf("OWNET_init(%s) failed.\n", owserver_address);
         exit(1);
     }
-    
-    if (OWNET_present(owh, temp_path) != 0) {
-        printf("Sensor not detected.\n");
-        exit(1);
-    }
 
     while (g_running) {
+        if (OWNET_present(owh, temp_path) != 0) {
+            printf("Sensor not detected.\n");
+            exit(1);
+        }
+        
         char *ret;
 
         OWNET_read(owh, temp_path, &ret);
