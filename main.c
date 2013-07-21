@@ -14,6 +14,7 @@
 volatile sig_atomic_t g_running = 1;
 pid_t pid;
 pid_t sid;
+int is_daemon = 0;
 
 void sig_handler(int signum) {
     syslog(LOG_WARNING, "Signal received, quitting.\n");
@@ -62,7 +63,23 @@ void daemonise(void) {
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
+
+    is_daemon = 1;
 }
+
+void check_sensor(OWNET_HANDLE owh) {
+    if (OWNET_present(owh, temp_path) != 0) {
+        if (is_daemon) {
+            syslog(LOG_ERR, "Sensor not detected. Quitting.\n");
+            exit(EXIT_FAILURE);
+        } else {
+            printf("Sensor not detected. Quitting.\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+
 
 int main(int argc, char **argv) {
     OWNET_HANDLE owh;
@@ -86,16 +103,14 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
+    check_sensor(owh);
+
     daemonise();
 
     syslog(LOG_NOTICE, "Ifrit started.");
 
     while (g_running) {
-        if (OWNET_present(owh, temp_path) != 0) {
-            syslog(LOG_ERR, "Sensor not detected.\n");
-            exit(EXIT_FAILURE);
-        }
-        
+        check_sensor(owh); 
         char *ret;
 
         OWNET_read(owh, temp_path, &ret);
