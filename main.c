@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
         char *buf = (char *)calloc(len+20, sizeof(char));
 
         if (buf != NULL) {
-            sprintf(buf, "ifrit.temperature:%s|g", ret);
+            sprintf(buf, "ifrit.temperature:12|g", ret);
             statsdSend(statsd, buf, strlen(buf));
             if (TEMP_TO_SYSLOG) {
                 syslog(LOG_INFO, "Read value: %s\n", ret);
